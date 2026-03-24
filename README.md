@@ -25,6 +25,12 @@
 ### macOS
 
 ```bash
+# 方式一：git clone 后运行（推荐）
+git clone https://github.com/howtimeschange/wechat-sender-cli.git
+cd wechat-sender-cli
+bash install.sh
+
+# 方式二：一键安装（安装到当前目录）
 bash <(curl -fsSL https://raw.githubusercontent.com/howtimeschange/wechat-sender-cli/main/install.sh)
 ```
 
@@ -32,16 +38,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/howtimeschange/wechat-sender
 
 ```powershell
 irm https://raw.githubusercontent.com/howtimeschange/wechat-sender-cli/main/install.ps1 | iex
-```
-
-手动安装：
-
-```bash
-git clone https://github.com/howtimeschange/wechat-sender-cli.git
-cd wechat-sender-cli
-bash install.sh      # macOS
-# 或
-install.bat          # Windows
 ```
 
 ## 快速开始

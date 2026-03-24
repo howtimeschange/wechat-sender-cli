@@ -1,14 +1,21 @@
 #!/bin/bash
 # ================================================
 # 微信批量发送助手 — macOS 安装脚本
-# 用法: bash install.sh
+# 用法:
+#   git clone 后运行: bash install.sh
+#   一键安装:         bash <(curl -fsSL https://raw.githubusercontent.com/howtimeschange/wechat-sender-cli/main/install.sh)
 # ================================================
 set -e
 
-cd "$(dirname "$0")"
-
 echo "🍎 微信批量发送助手 CLI — macOS 安装程序"
 echo "============================================"
+
+# 检测是否通过 curl|bash 管道运行
+if [[ ! -f "${BASH_SOURCE[0]}" || "${BASH_SOURCE[0]}" == "/dev/"* ]]; then
+    echo "[INFO] 检测到 curl | bash 模式，将安装到当前目录"
+    echo "[INFO] 建议先运行: cd ~/Projects && bash <(curl -fsSL ...)"
+    echo ""
+fi
 
 # 检查 Python 3
 if ! command -v python3 &>/dev/null; then
@@ -20,7 +27,7 @@ fi
 PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
 echo "✓ Python 版本: $PYTHON_VERSION"
 
-# 创建/激活虚拟环境
+# 创建/激活虚拟环境（安装到当前目录）
 if [ -d ".venv" ]; then
     echo "✓ 已有虚拟环境 .venv"
 else
