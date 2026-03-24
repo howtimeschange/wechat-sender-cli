@@ -1,0 +1,5 @@
+# Windows 自动化依赖
+uiautomation
+pyperclip
+pywin32
+Pillow

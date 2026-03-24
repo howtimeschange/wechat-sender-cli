@@ -157,20 +157,26 @@ def should_send(task: Task, now: datetime) -> bool:
 
 
 def call_sender(target: str, msg_type: str, text: str, image_path: str):
-    if not IS_MAC:
-        raise RuntimeError("微信自动化仅支持 macOS，请在 Mac 上运行")
     img = str(Path(image_path).expanduser()) if image_path else ""
-    cmd = ["osascript", str(APPLE_SCRIPT), target, msg_type, text, img]
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or "AppleScript 执行失败")
+    if IS_MAC:
+        cmd = ["osascript", str(APPLE_SCRIPT), target, msg_type, text, img]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError(r.stderr.strip() or "AppleScript 执行失败")
+    elif IS_WINDOWS:
+        import sys
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from wechat_send_win import call_send as win_call_send
+        win_call_send(target, msg_type, text, img)
+    else:
+        raise RuntimeError("当前系统不支持微信自动化（仅支持 macOS 和 Windows）")
 
 
 # ─── 命令 ────────────────────────────────────────────────
 
 def cmd_config_show(_):
     cfg = get_cfg()
-    os_label = "🍎 macOS" if IS_MAC else "🪟 Windows"
+    os_label = "🍎 macOS" if IS_MAC else ("🪟 Windows" if IS_WINDOWS else "❓ Unknown")
     table = Table(title=f"📋 当前配置 {os_label}", show_header=False, box=None)
     table.add_column("配置项", style="cyan")
     table.add_column("值", style="white")
@@ -180,7 +186,7 @@ def cmd_config_show(_):
         ("模拟运行 (dry_run)", "是 ✅" if cfg["dry_run"] else "否"),
         ("发送间隔 (send_interval)", f"{cfg['send_interval']} 秒"),
         ("每分钟最大条数 (max_per_minute)", str(cfg["max_per_minute"])),
-        ("平台", "macOS（支持自动化）" if IS_MAC else "Windows（仅查看/配置）"),
+        ("平台", "macOS（支持自动化）" if IS_MAC else "Windows（支持自动化）"),
     ]
     for k, v in items:
         table.add_row(k, v)
@@ -266,8 +272,9 @@ def cmd_status(_):
     table.add_row("📄 总计", str(len(tasks)))
     console.print(table)
 
-    if not IS_MAC:
-        console.print("\n[yellow]⚠️  当前为 Windows 环境，无法执行自动化发送，仅支持查看状态[/yellow]")
+    if IS_WINDOWS:
+        console.print("\n[yellow]⚠️  当前为 Windows 环境，请确保已安装 uiautomation/pyperclip[/yellow]")
+        console.print("[dim]   pip install uiautomation pyperclip pywin32 Pillow[/dim]")
 
     pending = [t for t in tasks if not t.status.startswith(STATUS_SUCCESS)]
     if pending:
@@ -287,9 +294,12 @@ def cmd_status(_):
 
 
 def cmd_send(args):
-    if not IS_MAC:
-        console.print("[red]❌ 微信自动化发送仅支持 macOS[/red]")
-        console.print("[yellow]请在 Mac 上运行此命令[/yellow]")
+    if IS_MAC:
+        platform_note = "🍎 macOS"
+    elif IS_WINDOWS:
+        platform_note = "🪟 Windows"
+    else:
+        console.print("[red]❌ 当前系统不支持微信自动化（仅支持 macOS 和 Windows）[/red]")
         return
 
     cfg = get_cfg()
@@ -313,7 +323,7 @@ def cmd_send(args):
         console.print("[yellow]没有需要发送的任务[/yellow]")
         return
 
-    console.print(f"[cyan]开始发送 {len(pending)} 条任务...[/cyan]")
+    console.print(f"[cyan]开始发送 {len(pending)} 条任务 [{platform_note}]...[/cyan]")
     if dry_run:
         console.print("[yellow]⚠️  模拟运行模式，不会真实发送[/yellow]")
 
@@ -359,8 +369,8 @@ def cmd_send(args):
 
 
 def cmd_daemon(args):
-    if not IS_MAC:
-        console.print("[red]❌ 微信自动化发送仅支持 macOS[/red]")
+    if not IS_MAC and not IS_WINDOWS:
+        console.print("[red]❌ 当前系统不支持微信自动化（仅支持 macOS 和 Windows）[/red]")
         return
 
     cfg = get_cfg()
