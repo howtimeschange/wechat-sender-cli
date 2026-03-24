@@ -10,7 +10,13 @@
 
 ## 快速安装
 
-### macOS
+### macOS（一键安装）
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/howtimeschange/wechat-sender-cli/main/install.sh)
+```
+
+或手动：
 
 ```bash
 git clone https://github.com/howtimeschange/wechat-sender-cli.git
